@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Universal AI Context Management CLI
+# Works with Claude, Cursor, Copilot, Gemini, OpenAI, and any AI provider
+
+# Find the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Source the main context system
+source "$SCRIPT_DIR/context.sh"
+
+# Call the context function with all arguments
+context "$@"

@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run tests
+        run: |
+          chmod +x test-suite.sh
+          ./test-suite.sh
+          
+      - name: Security check
+        run: |
+          chmod +x context-security-check.sh
+          ./context-security-check.sh
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+          
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        
+      - name: Update package.json version
+        run: |
+          sed -i 's/"version": ".*"/"version": "${{ steps.version.outputs.VERSION }}"/' package.json
+          
+      - name: Create release assets
+        run: |
+          # Create tarball
+          tar -czf dotfiles-context-${{ steps.version.outputs.VERSION }}.tar.gz \
+            context.sh install.sh uninstall.sh bin/ README.md LICENSE
+            
+          # Create installer script
+          cp install.sh dotfiles-context-installer.sh
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dotfiles-context-${{ steps.version.outputs.VERSION }}.tar.gz
+            dotfiles-context-installer.sh
+          body: |
+            ## Installation
+            
+            ### Quick Install (Recommended)
+            ```bash
+            curl -sSL https://github.com/anivar/dotfiles-context/releases/download/${{ github.ref_name }}/dotfiles-context-installer.sh | bash
+            ```
+            
+            ### npm Install
+            ```bash
+            npm install -g dotfiles-context@${{ steps.version.outputs.VERSION }}
+            ```
+            
+            ### Manual Install
+            ```bash
+            wget https://github.com/anivar/dotfiles-context/releases/download/${{ github.ref_name }}/dotfiles-context-${{ steps.version.outputs.VERSION }}.tar.gz
+            tar -xzf dotfiles-context-${{ steps.version.outputs.VERSION }}.tar.gz
+            ./install.sh
+            ```
+            
+            ## What's Changed
+            - Universal AI context management for all providers
+            - Works with Claude, Cursor, Copilot, Gemini, OpenAI
+            - Security improvements and input validation
+            - Documentation tracking with timestamps
+            - Auto .gitignore management
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  homebrew:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Update Homebrew formula
+        uses: dawidd6/action-homebrew-bump-formula@v3
+        with:
+          token: ${{ secrets.HOMEBREW_TOKEN }}
+          formula: dotfiles-context

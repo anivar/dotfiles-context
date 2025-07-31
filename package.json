@@ -1,0 +1,45 @@
+{
+  "name": "dotfiles-context",
+  "version": "1.0.0",
+  "description": "Universal AI context management for all AI providers (Claude, Cursor, Copilot, Gemini, OpenAI, etc.)",
+  "main": "context.sh",
+  "bin": {
+    "context": "./bin/context"
+  },
+  "scripts": {
+    "install": "bash install.sh",
+    "uninstall": "bash uninstall.sh",
+    "test": "bash test-suite.sh",
+    "security-check": "bash context-security-check.sh"
+  },
+  "keywords": [
+    "ai",
+    "context",
+    "claude",
+    "cursor",
+    "copilot",
+    "gemini",
+    "openai",
+    "dotfiles",
+    "productivity",
+    "memory"
+  ],
+  "author": "Anivar Aravind",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anivar/dotfiles-context.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anivar/dotfiles-context/issues"
+  },
+  "homepage": "https://github.com/anivar/dotfiles-context#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "preferGlobal": true
+}
